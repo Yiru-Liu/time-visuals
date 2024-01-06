@@ -1,0 +1,9 @@
+{
+    "compilerOptions": {
+        "skipLibCheck": true,
+        "noImplicitAny": true,
+        "target": "ESNext",
+        "lib": ["DOM", "DOM.Iterable", "ESNext"]
+    },
+    "exclude": ["./node_modules"]
+}
