@@ -26,6 +26,9 @@ type HandsConfig = {
   minute: HandConfig,
   second: HandConfig
 }
+type ConfigType = "HOUR_INSIDE" | "HOUR_OUTSIDE";
+
+const CONFIG_TYPE: ConfigType = "HOUR_OUTSIDE" as ConfigType;
 
 const SVG_WIDTH = 1024;
 const SVG_HEIGHT = 1024;
@@ -45,59 +48,117 @@ if (window.matchMedia &&
   POS_COLOR = "black";
 }
 
-const CLOCK_CONFIG: ClockConfig = {
-  hour: {
-    num: 24,
-    ml: [{
-      applies: (i) => i % 3 === 0,
-      range: [8.5 * LARGEU, 10.875 * LARGEU],
-      width: 3 * SMALLU,
-      size: 2 * LARGEU,
-      r: 6.5 * LARGEU,
-      isBold: false
-    }, {
-      applies: () => true,
-      range: [9.5 * LARGEU, 10.875 * LARGEU],
-      width: SMALLU,
-      size: 0.875 * LARGEU,
-      r: 8.5 * LARGEU,
-      isBold: false
-    }]
-  },
-  minute: {
-    num: 60,
-    ml: [{
-      applies: (i) => i % 5 === 0,
-      range: [11.5 * LARGEU, 13 * LARGEU],
-      width: 3 * SMALLU,
-      size: 0.75 * LARGEU,
-      r: 14 * LARGEU,
-      isBold: true
-    }, {
-      applies: () => true,
-      range: [11.5 * LARGEU, 13 * LARGEU],
-      width: 0.5 * SMALLU,
-      size: 0.75 * LARGEU,
-      r: 14 * LARGEU,
-      isBold: false
-    }]
-  }
-};
-
-const HANDS_CONFIG: HandsConfig = {
-  hour: {
-    length: 8 * LARGEU,
-    width: 10 * SMALLU,
-  },
-  minute: {
-    length: 12 * LARGEU,
-    width: 5 * SMALLU,
-  },
-  second: {
-    length: 13 * LARGEU,
-    width: 2 * SMALLU,
-  }
-};
+let CLOCK_CONFIG: ClockConfig, HANDS_CONFIG: HandsConfig;
+switch (CONFIG_TYPE) {
+  case "HOUR_INSIDE":
+    CLOCK_CONFIG = {
+      hour: {
+        num: 24,
+        ml: [{
+          applies: (i) => i % 3 === 0,
+          range: [8.5 * LARGEU, 10.875 * LARGEU],
+          width: 3 * SMALLU,
+          size: 2 * LARGEU,
+          r: 6.5 * LARGEU,
+          isBold: false
+        }, {
+          applies: () => true,
+          range: [9.5 * LARGEU, 10.875 * LARGEU],
+          width: SMALLU,
+          size: 0.875 * LARGEU,
+          r: 8.5 * LARGEU,
+          isBold: false
+        }]
+      },
+      minute: {
+        num: 60,
+        ml: [{
+          applies: (i) => i % 5 === 0,
+          range: [11.5 * LARGEU, 13 * LARGEU],
+          width: 3 * SMALLU,
+          size: 0.75 * LARGEU,
+          r: 14 * LARGEU,
+          isBold: true
+        }, {
+          applies: () => true,
+          range: [11.5 * LARGEU, 13 * LARGEU],
+          width: 0.5 * SMALLU,
+          size: 0.75 * LARGEU,
+          r: 14 * LARGEU,
+          isBold: false
+        }]
+      }
+    };
+    HANDS_CONFIG = {
+      hour: {
+        length: 8 * LARGEU,
+        width: 10 * SMALLU,
+      },
+      minute: {
+        length: 12 * LARGEU,
+        width: 5 * SMALLU,
+      },
+      second: {
+        length: 13 * LARGEU,
+        width: 2 * SMALLU,
+      }
+    };
+    break;
+  case "HOUR_OUTSIDE":
+    CLOCK_CONFIG = {
+      hour: {
+        num: 24,
+        ml: [{
+          applies: (i) => i % 3 === 0,
+          range: [9 * LARGEU, 12 * LARGEU],
+          width: 4 * SMALLU,
+          size: 2.5 * LARGEU,
+          r: 14 * LARGEU,
+          isBold: false
+        }, {
+          applies: () => true,
+          range: [9 * LARGEU, 10.75 * LARGEU],
+          width: SMALLU,
+          size: LARGEU,
+          r: 11.75 * LARGEU,
+          isBold: false
+        }]
+      },
+      minute: {
+        num: 60,
+        ml: [{
+          applies: (i) => i % 5 === 0,
+          range: [5.5 * LARGEU, 8 * LARGEU],
+          width: 2 * SMALLU,
+          size: 0.75 * LARGEU,
+          r: 4.5 * LARGEU,
+          isBold: true
+        }, {
+          applies: () => true,
+          range: [6.5 * LARGEU, 8 * LARGEU],
+          width: 0.5 * SMALLU,
+          size: null,
+          r: null,
+          isBold: null
+        }]
+      }
+    };
+    HANDS_CONFIG = {
+      hour: {
+        length: 9.75 * LARGEU,
+        width: 2 * SMALLU,
+      },
+      minute: {
+        length: 7.5 * LARGEU,
+        width: 5 * SMALLU,
+      },
+      second: {
+        length: 7 * LARGEU,
+        width: 2 * SMALLU,
+      }
+    };
+    break;
+}
 
 let svgElt: SvgType;
 let mainElt: HTMLDivElement;
@@ -134,11 +195,10 @@ function initializeSvg(): void {
   svgElt.append(defsElt);
 }
 
-function makeLabelText(coords: Coords, content: number,
+function makeLabelText(coords: Coords, content: string,
   fontSize: number, isBold: boolean): HTMLElement {
   const label = document.createElement("text");
-  label.appendChild(document.createTextNode(
-    content.toString().padStart(2, "0")));
+  label.appendChild(document.createTextNode(content));
   label.setAttribute("text-anchor", "middle");
   label.setAttribute("dominant-baseline", "central");
   label.setAttribute("x", coords[0].toFixed(12) as any);
@@ -174,10 +234,14 @@ function makeMarksAndLabels(subdivs: ClockSubdivisions): HTMLElement[] {
     for (const mlconfig of subdivs.ml) {
       if (mlconfig.applies(i)) {
         mark = makeMark(mlconfig.range, mlconfig.width, angleDegrees);
-        label = makeLabelText(
-          [mlconfig.r * -Math.sin(angleRadians),
-          mlconfig.r * Math.cos(angleRadians)],
-          i, mlconfig.size, mlconfig.isBold);
+        if (mlconfig.size === null) {
+          label = null;
+        } else {
+          label = makeLabelText(
+            [mlconfig.r * -Math.sin(angleRadians),
+            mlconfig.r * Math.cos(angleRadians)],
+            i.toString().padStart(2, "0"), mlconfig.size, mlconfig.isBold);
+        }
         break;
       }
     }
@@ -187,21 +251,41 @@ function makeMarksAndLabels(subdivs: ClockSubdivisions): HTMLElement[] {
     }
 
     marksLabels.push(mark);
-    marksLabels.push(label);
+    if (label !== null) {
+      marksLabels.push(label);
+    }
   }
   return marksLabels;
 }
 
 function makeHourHand(): HTMLElement {
-  const defsElt = document.getElementById("defs");
-  defsElt.appendChild(
-    makeTriangleMarker("hour-arrow", HANDS_CONFIG.hour.width));
-  const hourHand = document.createElement("line");
-  hourHand.id = "hour-hand";
-  hourHand.setAttribute("stroke", POS_COLOR);
-  hourHand.setAttribute("y2", HANDS_CONFIG.hour.length as any);
-  hourHand.setAttribute("stroke-width", HANDS_CONFIG.hour.width as any);
-  hourHand.setAttribute("marker-end", "url(#hour-arrow)");
+  let hourHand;
+  switch (CONFIG_TYPE) {
+    case "HOUR_INSIDE":
+      const defsElt = document.getElementById("defs");
+      defsElt.appendChild(
+        makeTriangleMarker("hour-arrow", HANDS_CONFIG.hour.width));
+      hourHand = document.createElement("line");
+      hourHand.id = "hour-hand";
+      hourHand.setAttribute("stroke", POS_COLOR);
+      hourHand.setAttribute("y2", HANDS_CONFIG.hour.length as any);
+      hourHand.setAttribute("stroke-width", HANDS_CONFIG.hour.width as any);
+      hourHand.setAttribute("marker-end", "url(#hour-arrow)");
+      break;
+    case "HOUR_OUTSIDE":
+      hourHand = document.createElement("g");
+      hourHand.id = "hour-hand";
+
+      const hourHandLine = document.createElement("line");
+      hourHandLine.setAttribute("stroke", POS_COLOR);
+      hourHandLine.setAttribute("y2", HANDS_CONFIG.hour.length as any);
+      hourHandLine.setAttribute("stroke-width", HANDS_CONFIG.hour.width as any);
+
+      const hourHandSun = makeLabelText([0, HANDS_CONFIG.hour.length], "☀︎",
+        HANDS_CONFIG.hour.width * 20, false);
+
+      hourHand.append(hourHandLine, hourHandSun);
+  }
   return hourHand;
 }
 
