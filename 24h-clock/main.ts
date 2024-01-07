@@ -28,7 +28,13 @@ type HandsConfig = {
 }
 type ConfigType = "HOUR_INSIDE" | "HOUR_OUTSIDE";
 
-const CONFIG_TYPE: ConfigType = "HOUR_OUTSIDE" as ConfigType;
+let CONFIG_TYPE: ConfigType;
+const urlParams = new URLSearchParams(window.location.search);
+if (urlParams.get("clockface") === "HOUR_INSIDE") {
+  CONFIG_TYPE = "HOUR_INSIDE";
+} else {
+  CONFIG_TYPE = "HOUR_OUTSIDE";
+}
 
 const SVG_WIDTH = 1024;
 const SVG_HEIGHT = 1024;
@@ -145,8 +151,8 @@ switch (CONFIG_TYPE) {
     };
     HANDS_CONFIG = {
       hour: {
-        length: 9.75 * LARGEU,
-        width: 2 * SMALLU,
+        length: 10 * LARGEU,
+        width: 10 * SMALLU,
       },
       minute: {
         length: 7.5 * LARGEU,
@@ -259,33 +265,15 @@ function makeMarksAndLabels(subdivs: ClockSubdivisions): HTMLElement[] {
 }
 
 function makeHourHand(): HTMLElement {
-  let hourHand;
-  switch (CONFIG_TYPE) {
-    case "HOUR_INSIDE":
-      const defsElt = document.getElementById("defs");
-      defsElt.appendChild(
-        makeTriangleMarker("hour-arrow", HANDS_CONFIG.hour.width));
-      hourHand = document.createElement("line");
-      hourHand.id = "hour-hand";
-      hourHand.setAttribute("stroke", POS_COLOR);
-      hourHand.setAttribute("y2", HANDS_CONFIG.hour.length as any);
-      hourHand.setAttribute("stroke-width", HANDS_CONFIG.hour.width as any);
-      hourHand.setAttribute("marker-end", "url(#hour-arrow)");
-      break;
-    case "HOUR_OUTSIDE":
-      hourHand = document.createElement("g");
-      hourHand.id = "hour-hand";
-
-      const hourHandLine = document.createElement("line");
-      hourHandLine.setAttribute("stroke", POS_COLOR);
-      hourHandLine.setAttribute("y2", HANDS_CONFIG.hour.length as any);
-      hourHandLine.setAttribute("stroke-width", HANDS_CONFIG.hour.width as any);
-
-      const hourHandSun = makeLabelText([0, HANDS_CONFIG.hour.length], "☀︎",
-        HANDS_CONFIG.hour.width * 20, false);
-
-      hourHand.append(hourHandLine, hourHandSun);
-  }
+  const defsElt = document.getElementById("defs");
+  defsElt.appendChild(
+    makeTriangleMarker("hour-arrow", HANDS_CONFIG.hour.width));
+  const hourHand = document.createElement("line");
+  hourHand.id = "hour-hand";
+  hourHand.setAttribute("stroke", POS_COLOR);
+  hourHand.setAttribute("y2", HANDS_CONFIG.hour.length as any);
+  hourHand.setAttribute("stroke-width", HANDS_CONFIG.hour.width as any);
+  hourHand.setAttribute("marker-end", "url(#hour-arrow)");
   return hourHand;
 }
 
