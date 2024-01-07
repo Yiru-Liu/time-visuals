@@ -1,3 +1,32 @@
+type SvgType = HTMLElement & SVGElement;
+type Coords = [x: number, y: number];
+type DistRange = [r1: number, r2: number];
+type MlConfig = {
+  applies: (i: number) => boolean,
+  range: DistRange,
+  width: number,
+  size: number,
+  r: number,
+  isBold: boolean
+}
+type ClockSubdivisions = {
+  num: number,
+  ml: MlConfig[]
+}
+type ClockConfig = {
+  hour: ClockSubdivisions,
+  minute: ClockSubdivisions
+}
+type HandConfig = {
+  length: number,
+  width: number
+}
+type HandsConfig = {
+  hour: HandConfig,
+  minute: HandConfig,
+  second: HandConfig
+}
+
 const SVG_WIDTH = 1024;
 const SVG_HEIGHT = 1024;
 
@@ -16,37 +45,61 @@ if (window.matchMedia &&
   POS_COLOR = "black";
 }
 
-const NUM_HOURS = 24;
-const HOUR_M1_PERIOD = 3;
-const HOUR_MARKS_OUTER = 10.875 * LARGEU;
-const M1_HOUR_MARKS_INNER = 8.5 * LARGEU;
-const M0_HOUR_MARKS_INNER = 9.5 * LARGEU;
-const M1_HOUR_MARKS_WIDTH = 3 * SMALLU;
-const M0_HOUR_MARKS_WIDTH = SMALLU;
-const M1_HOUR_LABEL_SIZE = 2 * LARGEU;
-const M0_HOUR_LABEL_SIZE = 0.875 * LARGEU;
-const M1_HOUR_LABEL_R = 6.5 * LARGEU;
-const M0_HOUR_LABEL_R = 8.5 * LARGEU;
+const CLOCK_CONFIG: ClockConfig = {
+  hour: {
+    num: 24,
+    ml: [{
+      applies: (i) => i % 3 === 0,
+      range: [8.5 * LARGEU, 10.875 * LARGEU],
+      width: 3 * SMALLU,
+      size: 2 * LARGEU,
+      r: 6.5 * LARGEU,
+      isBold: false
+    }, {
+      applies: () => true,
+      range: [9.5 * LARGEU, 10.875 * LARGEU],
+      width: SMALLU,
+      size: 0.875 * LARGEU,
+      r: 8.5 * LARGEU,
+      isBold: false
+    }]
+  },
+  minute: {
+    num: 60,
+    ml: [{
+      applies: (i) => i % 5 === 0,
+      range: [11.5 * LARGEU, 13 * LARGEU],
+      width: 3 * SMALLU,
+      size: 0.75 * LARGEU,
+      r: 14 * LARGEU,
+      isBold: true
+    }, {
+      applies: () => true,
+      range: [11.5 * LARGEU, 13 * LARGEU],
+      width: 0.5 * SMALLU,
+      size: 0.75 * LARGEU,
+      r: 14 * LARGEU,
+      isBold: false
+    }]
+  }
+};
 
-const NUM_MINUTES = 60;
-const MINUTE_MAJOR_DIVISION = 5;
-const MINUTE_MARKS_INNER = 11.5 * LARGEU;
-const MINUTE_MARKS_OUTER = 13 * LARGEU;
-const MAJOR_MINUTE_MARKS_WIDTH = 3 * SMALLU;
-const MINOR_MINUTE_MARKS_WIDTH = 0.5 * SMALLU;
-const MINUTE_LABEL_SIZE = 0.75 * LARGEU;
-const MINUTE_LABEL_R = 14 * LARGEU;
+const HANDS_CONFIG: HandsConfig = {
+  hour: {
+    length: 8 * LARGEU,
+    width: 10 * SMALLU,
+  },
+  minute: {
+    length: 12 * LARGEU,
+    width: 5 * SMALLU,
+  },
+  second: {
+    length: 13 * LARGEU,
+    width: 2 * SMALLU,
+  }
+};
 
-const HOUR_HAND_LENGTH = 8 * LARGEU;
-const HOUR_HAND_WIDTH = 10 * SMALLU;
-const MINUTE_HAND_LENGTH = 12 * LARGEU;
-const MINUTE_HAND_WIDTH = 5 * SMALLU;
-const SECOND_HAND_LENGTH = 13 * LARGEU;
-const SECOND_HAND_WIDTH = 2 * SMALLU;
-
-type svgType = HTMLElement & SVGElement;
-
-let svgElt: svgType;
+let svgElt: SvgType;
 let mainElt: HTMLDivElement;
 
 function refreshSvg(): void {
@@ -77,116 +130,121 @@ function initializeSvg(): void {
     `${-SVG_WIDTH / 2} ${-SVG_HEIGHT / 2} ${SVG_WIDTH} ${SVG_HEIGHT}`);
 
   const defsElt = document.createElement("defs");
-  defsElt.append(makeTriangleMarker("hour-arrow", HOUR_HAND_WIDTH),
-    makeTriangleMarker("minute-arrow", MINUTE_HAND_WIDTH));
+  defsElt.id = "defs";
   svgElt.append(defsElt);
 }
 
-function intializeClock(): void {
-  const hourMarksLabels: HTMLElement[] = [];
-  for (let i = 0; i < NUM_HOURS; i++) {
-    const angleDegrees = 360 / NUM_HOURS * i;
+function makeLabelText(coords: Coords, content: number,
+  fontSize: number, isBold: boolean): HTMLElement {
+  const label = document.createElement("text");
+  label.appendChild(document.createTextNode(
+    content.toString().padStart(2, "0")));
+  label.setAttribute("text-anchor", "middle");
+  label.setAttribute("dominant-baseline", "central");
+  label.setAttribute("x", coords[0].toFixed(12) as any);
+  label.setAttribute("y", coords[1].toFixed(12) as any);
+  label.setAttribute("fill", POS_COLOR);
+  label.setAttribute("font-family", "Helvetica, sans-serif");
+  label.setAttribute("style", "font-variant-numeric: tabular-nums");
+  label.setAttribute("font-size", fontSize as any);
+  if (isBold) {
+    label.setAttribute("font-weight", "bold");
+  }
+  return label;
+}
+
+function makeMark(range: DistRange, width: number,
+  rotation: number): HTMLElement {
+  const mark = document.createElement("line");
+  mark.setAttribute("stroke", POS_COLOR);
+  mark.setAttribute("stroke-width", width as any);
+  mark.setAttribute("y1", range[0] as any);
+  mark.setAttribute("y2", range[1] as any);
+  mark.setAttribute("transform", `rotate(${rotation})`);
+  return mark;
+}
+
+function makeMarksAndLabels(subdivs: ClockSubdivisions): HTMLElement[] {
+  const marksLabels: HTMLElement[] = [];
+  for (let i = 0; i < subdivs.num; i++) {
+    const angleDegrees = 360 / subdivs.num * i;
     const angleRadians = angleDegrees * Math.PI / 180;
 
-    const mark = document.createElement("line");
-    const label = document.createElement("text");
-
-    mark.setAttribute("stroke", POS_COLOR);
-    mark.setAttribute("y1", HOUR_MARKS_OUTER as any);
-    mark.setAttribute("transform", `rotate(${angleDegrees})`);
-
-    label.appendChild(document.createTextNode(i.toString().padStart(2, "0")));
-    label.setAttribute("text-anchor", "middle");
-    label.setAttribute("dominant-baseline", "central");
-    label.setAttribute("fill", POS_COLOR);
-    label.setAttribute("font-family", "Helvetica, sans-serif");
-    label.setAttribute("style", "font-variant-numeric: tabular-nums");
-
-    if (i % HOUR_M1_PERIOD) {
-      mark.setAttribute("y2", M0_HOUR_MARKS_INNER as any);
-      mark.setAttribute("stroke-width", M0_HOUR_MARKS_WIDTH as any);
-
-      label.setAttribute("font-size", M0_HOUR_LABEL_SIZE as any);
-      label.setAttribute("y",
-        (M0_HOUR_LABEL_R * Math.cos(angleRadians)).toFixed(12) as any);
-      label.setAttribute("x",
-        (M0_HOUR_LABEL_R * -Math.sin(angleRadians)).toFixed(12) as any);
-    } else {
-      mark.setAttribute("y2", M1_HOUR_MARKS_INNER as any);
-      mark.setAttribute("stroke-width", M1_HOUR_MARKS_WIDTH as any);
-
-      label.setAttribute("font-size", M1_HOUR_LABEL_SIZE as any);
-      label.setAttribute("y",
-        (M1_HOUR_LABEL_R * Math.cos(angleRadians)).toFixed(12) as any);
-      label.setAttribute("x",
-        (M1_HOUR_LABEL_R * -Math.sin(angleRadians)).toFixed(12) as any);
+    let mark: HTMLElement, label: HTMLElement;
+    for (const mlconfig of subdivs.ml) {
+      if (mlconfig.applies(i)) {
+        mark = makeMark(mlconfig.range, mlconfig.width, angleDegrees);
+        label = makeLabelText(
+          [mlconfig.r * -Math.sin(angleRadians),
+          mlconfig.r * Math.cos(angleRadians)],
+          i, mlconfig.size, mlconfig.isBold);
+        break;
+      }
     }
 
-    hourMarksLabels.push(mark);
-    hourMarksLabels.push(label);
-  }
-
-  const minuteMarksLabels: HTMLElement[] = [];
-  for (let i = 0; i < NUM_MINUTES; i++) {
-    const angleDegrees = 360 / NUM_MINUTES * i;
-    const angleRadians = angleDegrees * Math.PI / 180;
-
-    const mark = document.createElement("line");
-    const label = document.createElement("text");
-
-    mark.setAttribute("stroke", POS_COLOR);
-    mark.setAttribute("y1", MINUTE_MARKS_INNER as any);
-    mark.setAttribute("y2", MINUTE_MARKS_OUTER as any);
-    mark.setAttribute("transform", `rotate(${angleDegrees})`);
-
-    label.appendChild(document.createTextNode(i.toString().padStart(2, "0")));
-    label.setAttribute("text-anchor", "middle");
-    label.setAttribute("dominant-baseline", "central");
-    label.setAttribute("fill", POS_COLOR);
-    label.setAttribute("font-family", "Helvetica, sans-serif");
-    label.setAttribute("font-size", MINUTE_LABEL_SIZE as any);
-    label.setAttribute("style", "font-variant-numeric: tabular-nums");
-    label.setAttribute("y",
-      (MINUTE_LABEL_R * Math.cos(angleRadians)).toFixed(12) as any);
-    label.setAttribute("x",
-      (MINUTE_LABEL_R * -Math.sin(angleRadians)).toFixed(12) as any);
-
-    if (i % MINUTE_MAJOR_DIVISION) {
-      mark.setAttribute("stroke-width", MINOR_MINUTE_MARKS_WIDTH as any);
-    } else {
-      mark.setAttribute("stroke-width", MAJOR_MINUTE_MARKS_WIDTH as any);
-      label.setAttribute("font-weight", "bold");
+    if (mark === undefined || label === undefined) {
+      throw new Error("No mlconfig applied");
     }
 
-    minuteMarksLabels.push(mark);
-    minuteMarksLabels.push(label);
+    marksLabels.push(mark);
+    marksLabels.push(label);
   }
+  return marksLabels;
+}
 
+function makeHourHand(): HTMLElement {
+  const defsElt = document.getElementById("defs");
+  defsElt.appendChild(
+    makeTriangleMarker("hour-arrow", HANDS_CONFIG.hour.width));
   const hourHand = document.createElement("line");
   hourHand.id = "hour-hand";
   hourHand.setAttribute("stroke", POS_COLOR);
-  hourHand.setAttribute("y2", HOUR_HAND_LENGTH as any);
-  hourHand.setAttribute("stroke-width", HOUR_HAND_WIDTH as any);
+  hourHand.setAttribute("y2", HANDS_CONFIG.hour.length as any);
+  hourHand.setAttribute("stroke-width", HANDS_CONFIG.hour.width as any);
   hourHand.setAttribute("marker-end", "url(#hour-arrow)");
+  return hourHand;
+}
 
+function makeMinuteHand(): HTMLElement {
+  const defsElt = document.getElementById("defs");
+  defsElt.appendChild(
+    makeTriangleMarker("minute-arrow", HANDS_CONFIG.minute.width));
   const minuteHand = document.createElement("line");
   minuteHand.id = "minute-hand";
   minuteHand.setAttribute("stroke", POS_COLOR);
-  minuteHand.setAttribute("y2", MINUTE_HAND_LENGTH as any);
-  minuteHand.setAttribute("stroke-width", MINUTE_HAND_WIDTH as any);
+  minuteHand.setAttribute("y2", HANDS_CONFIG.minute.length as any);
+  minuteHand.setAttribute("stroke-width", HANDS_CONFIG.minute.width as any);
   minuteHand.setAttribute("marker-end", "url(#minute-arrow)");
+  return minuteHand;
+}
 
+function makeSecondHand(): HTMLElement {
   const secondHand = document.createElement("line");
   secondHand.id = "second-hand";
   secondHand.setAttribute("stroke", POS_COLOR);
-  secondHand.setAttribute("y2", SECOND_HAND_LENGTH as any);
-  secondHand.setAttribute("stroke-width", SECOND_HAND_WIDTH as any);
+  secondHand.setAttribute("y2", HANDS_CONFIG.second.length as any);
+  secondHand.setAttribute("stroke-width", HANDS_CONFIG.second.width as any);
+  return secondHand;
+}
 
+function makeCenterPin(): HTMLElement {
   const centerPin = document.createElement("circle");
   centerPin.setAttribute("r", 6 * SMALLU as any);
   centerPin.setAttribute("stroke", POS_COLOR);
   centerPin.setAttribute("stroke-width", 2 * SMALLU as any);
   centerPin.setAttribute("fill", NEG_COLOR);
+  return centerPin;
+}
+
+function intializeClock(): void {
+  const hourMarksLabels = makeMarksAndLabels(CLOCK_CONFIG.hour);
+  const minuteMarksLabels = makeMarksAndLabels(CLOCK_CONFIG.minute);
+
+  const hourHand = makeHourHand();
+  const minuteHand = makeMinuteHand();
+  const secondHand = makeSecondHand();
+
+  const centerPin = makeCenterPin();
 
   svgElt.append(...hourMarksLabels, ...minuteMarksLabels,
     hourHand, minuteHand, secondHand, centerPin);
@@ -221,7 +279,7 @@ function updateClock(): void {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  svgElt = document.getElementById("main-svg") as svgType;
+  svgElt = document.getElementById("main-svg") as SvgType;
   mainElt = document.getElementsByTagName("main")[0] as HTMLDivElement;
   initializeSvg();
   intializeClock();
