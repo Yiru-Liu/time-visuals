@@ -8,57 +8,91 @@ else {
 }
 const SVG_WIDTH = 1024;
 const SVG_HEIGHT = 1024;
-const SVG_RADIUS = Math.min(SVG_WIDTH / 2, SVG_HEIGHT / 2);
-const LARGEU = SVG_RADIUS / 16;
+const SCALE_FACTOR = Number(urlParams.get("scale")) || 1;
+const RENDER_RADIUS = Math.min(SVG_WIDTH / 2, SVG_HEIGHT / 2) * SCALE_FACTOR;
+const LARGEU = RENDER_RADIUS / 16;
 const SMALLU = LARGEU / 16;
-let NEG_COLOR, POS_COLOR;
-if (window.matchMedia &&
-    window.matchMedia("(prefers-color-scheme: dark)").matches) {
-    NEG_COLOR = "black";
-    POS_COLOR = "white";
+let COLOR_SCHEME = urlParams.get("colorScheme");
+if (COLOR_SCHEME !== "light" && COLOR_SCHEME !== "dark") {
+    if (window.matchMedia &&
+        window.matchMedia("(prefers-color-scheme: dark)").matches) {
+        COLOR_SCHEME = "dark";
+    }
+    else {
+        COLOR_SCHEME = "light";
+    }
 }
-else {
-    NEG_COLOR = "white";
-    POS_COLOR = "black";
+let NEG_COLOR, POS_COLOR;
+switch (COLOR_SCHEME) {
+    case "light":
+        NEG_COLOR = "white";
+        POS_COLOR = "black";
+        break;
+    case "dark":
+        NEG_COLOR = "black";
+        POS_COLOR = "white";
 }
 let CLOCK_CONFIG, HANDS_CONFIG;
 switch (CONFIG_TYPE) {
     case "HOUR_INSIDE":
         CLOCK_CONFIG = {
+            outline: null,
             hour: {
                 num: 24,
                 ml: [{
-                        applies: (i) => i % 3 === 0,
-                        range: [8.5 * LARGEU, 10.875 * LARGEU],
-                        width: 3 * SMALLU,
-                        size: 2 * LARGEU,
-                        r: 6.5 * LARGEU,
-                        isBold: false
+                        applies: {
+                            period: 3,
+                            offset: 0
+                        },
+                        mark: {
+                            range: [8.5 * LARGEU, 10.875 * LARGEU],
+                            width: 3 * SMALLU
+                        },
+                        label: {
+                            size: 2 * LARGEU,
+                            r: 6.5 * LARGEU,
+                            isBold: false
+                        }
                     }, {
-                        applies: () => true,
-                        range: [9.5 * LARGEU, 10.875 * LARGEU],
-                        width: SMALLU,
-                        size: 0.875 * LARGEU,
-                        r: 8.5 * LARGEU,
-                        isBold: false
+                        applies: true,
+                        mark: {
+                            range: [9.5 * LARGEU, 10.875 * LARGEU],
+                            width: SMALLU
+                        },
+                        label: {
+                            size: 0.875 * LARGEU,
+                            r: 8.5 * LARGEU,
+                            isBold: false
+                        }
                     }]
             },
             minute: {
                 num: 60,
                 ml: [{
-                        applies: (i) => i % 5 === 0,
-                        range: [11.5 * LARGEU, 13 * LARGEU],
-                        width: 3 * SMALLU,
-                        size: 0.75 * LARGEU,
-                        r: 14 * LARGEU,
-                        isBold: true
+                        applies: {
+                            period: 5,
+                            offset: 0
+                        },
+                        mark: {
+                            range: [11.5 * LARGEU, 13 * LARGEU],
+                            width: 3 * SMALLU
+                        },
+                        label: {
+                            size: 0.75 * LARGEU,
+                            r: 14 * LARGEU,
+                            isBold: true
+                        }
                     }, {
-                        applies: () => true,
-                        range: [11.5 * LARGEU, 13 * LARGEU],
-                        width: 0.5 * SMALLU,
-                        size: 0.75 * LARGEU,
-                        r: 14 * LARGEU,
-                        isBold: false
+                        applies: true,
+                        mark: {
+                            range: [11.5 * LARGEU, 13 * LARGEU],
+                            width: 0.5 * SMALLU,
+                        },
+                        label: {
+                            size: 0.75 * LARGEU,
+                            r: 14 * LARGEU,
+                            isBold: false
+                        }
                     }]
             }
         };
@@ -68,7 +102,7 @@ switch (CONFIG_TYPE) {
                 width: 10 * SMALLU,
             },
             minute: {
-                length: 12 * LARGEU,
+                length: 12.5 * LARGEU,
                 width: 5 * SMALLU,
             },
             second: {
@@ -79,40 +113,59 @@ switch (CONFIG_TYPE) {
         break;
     case "HOUR_OUTSIDE":
         CLOCK_CONFIG = {
+            outline: null,
             hour: {
                 num: 24,
                 ml: [{
-                        applies: (i) => i % 3 === 0,
-                        range: [9 * LARGEU, 12 * LARGEU],
-                        width: 4 * SMALLU,
-                        size: 2.5 * LARGEU,
-                        r: 14 * LARGEU,
-                        isBold: false
+                        applies: {
+                            period: 3,
+                            offset: 0
+                        },
+                        mark: {
+                            range: [9 * LARGEU, 12 * LARGEU],
+                            width: 4 * SMALLU
+                        },
+                        label: {
+                            size: 2.5 * LARGEU,
+                            r: 14 * LARGEU,
+                            isBold: false
+                        }
                     }, {
-                        applies: () => true,
-                        range: [9 * LARGEU, 10.75 * LARGEU],
-                        width: SMALLU,
-                        size: LARGEU,
-                        r: 11.75 * LARGEU,
-                        isBold: false
+                        applies: true,
+                        mark: {
+                            range: [9 * LARGEU, 10.75 * LARGEU],
+                            width: SMALLU
+                        },
+                        label: {
+                            size: LARGEU,
+                            r: 11.75 * LARGEU,
+                            isBold: false
+                        }
                     }]
             },
             minute: {
                 num: 60,
                 ml: [{
-                        applies: (i) => i % 5 === 0,
-                        range: [5.5 * LARGEU, 8 * LARGEU],
-                        width: 2 * SMALLU,
-                        size: 0.75 * LARGEU,
-                        r: 4.5 * LARGEU,
-                        isBold: true
+                        applies: {
+                            period: 5,
+                            offset: 0
+                        },
+                        mark: {
+                            range: [5.5 * LARGEU, 8 * LARGEU],
+                            width: 2 * SMALLU
+                        },
+                        label: {
+                            size: 0.75 * LARGEU,
+                            r: 4.5 * LARGEU,
+                            isBold: true
+                        }
                     }, {
-                        applies: () => true,
-                        range: [6.5 * LARGEU, 8 * LARGEU],
-                        width: 0.5 * SMALLU,
-                        size: null,
-                        r: null,
-                        isBold: null
+                        applies: true,
+                        mark: {
+                            range: [6.5 * LARGEU, 8 * LARGEU],
+                            width: 0.5 * SMALLU
+                        },
+                        label: null
                     }]
             }
         };
@@ -131,6 +184,31 @@ switch (CONFIG_TYPE) {
             }
         };
         break;
+}
+function setByPath(object, path, value) {
+    switch (path.length) {
+        case 0:
+            throw new Error("Empty path");
+        case 1:
+            object[path[0]] = value;
+            break;
+        default:
+            setByPath(object[path[0]], path.slice(1), value);
+    }
+}
+const customConfig = urlParams.get("config");
+if (customConfig) {
+    const configList = customConfig.split(";");
+    console.log("Custom config:", configList);
+    for (const kvstring of configList) {
+        const kvpair = kvstring.split("=");
+        console.log("kvpair:", kvpair);
+        const keypath = kvpair[0].split(".");
+        const value = JSON.parse(kvpair[1]);
+        console.log("keypath:", keypath);
+        console.log("value", value);
+        setByPath(CLOCK_CONFIG, keypath, value);
+    }
 }
 let svgElt;
 let mainElt;
@@ -191,14 +269,15 @@ function makeMarksAndLabels(subdivs) {
         const angleRadians = angleDegrees * Math.PI / 180;
         let mark, label;
         for (const mlconfig of subdivs.ml) {
-            if (mlconfig.applies(i)) {
-                mark = makeMark(mlconfig.range, mlconfig.width, angleDegrees);
-                if (mlconfig.size === null) {
-                    label = null;
+            if (typeof mlconfig.applies === "boolean" ? mlconfig.applies :
+                i % mlconfig.applies.period === mlconfig.applies.offset) {
+                mark = makeMark(mlconfig.mark.range, mlconfig.mark.width, angleDegrees);
+                if (mlconfig.label) {
+                    label = makeLabelText([mlconfig.label.r * -Math.sin(angleRadians),
+                        mlconfig.label.r * Math.cos(angleRadians)], i.toString().padStart(2, "0"), mlconfig.label.size, mlconfig.label.isBold);
                 }
                 else {
-                    label = makeLabelText([mlconfig.r * -Math.sin(angleRadians),
-                        mlconfig.r * Math.cos(angleRadians)], i.toString().padStart(2, "0"), mlconfig.size, mlconfig.isBold);
+                    label = null;
                 }
                 break;
             }
@@ -213,34 +292,51 @@ function makeMarksAndLabels(subdivs) {
     }
     return marksLabels;
 }
+function pointedHandPoints(length, width) {
+    return [
+        [-width / 2, 0],
+        [-width / 2, length - width],
+        [0, length],
+        [width / 2, length - width],
+        [width / 2, 0]
+    ];
+}
+function flatHandPoints(length, width) {
+    return [
+        [-width / 2, 0],
+        [-width / 2, length],
+        [width / 2, length],
+        [width / 2, 0]
+    ];
+}
+function toPointsString(points) {
+    return points.map(p => p.join(",")).join(" ");
+}
 function makeHourHand() {
-    const defsElt = document.getElementById("defs");
-    defsElt.appendChild(makeTriangleMarker("hour-arrow", HANDS_CONFIG.hour.width));
-    const hourHand = document.createElement("line");
+    const hourHandPoints = pointedHandPoints(HANDS_CONFIG.hour.length, HANDS_CONFIG.hour.width);
+    const hourHand = document.createElement("polygon");
     hourHand.id = "hour-hand";
-    hourHand.setAttribute("stroke", POS_COLOR);
-    hourHand.setAttribute("y2", HANDS_CONFIG.hour.length);
-    hourHand.setAttribute("stroke-width", HANDS_CONFIG.hour.width);
-    hourHand.setAttribute("marker-end", "url(#hour-arrow)");
+    hourHand.setAttribute("stroke", NEG_COLOR);
+    hourHand.setAttribute("fill", POS_COLOR);
+    hourHand.setAttribute("points", toPointsString(hourHandPoints));
     return hourHand;
 }
 function makeMinuteHand() {
-    const defsElt = document.getElementById("defs");
-    defsElt.appendChild(makeTriangleMarker("minute-arrow", HANDS_CONFIG.minute.width));
-    const minuteHand = document.createElement("line");
+    const minuteHandPoints = pointedHandPoints(HANDS_CONFIG.minute.length, HANDS_CONFIG.minute.width);
+    const minuteHand = document.createElement("polygon");
     minuteHand.id = "minute-hand";
-    minuteHand.setAttribute("stroke", POS_COLOR);
-    minuteHand.setAttribute("y2", HANDS_CONFIG.minute.length);
-    minuteHand.setAttribute("stroke-width", HANDS_CONFIG.minute.width);
-    minuteHand.setAttribute("marker-end", "url(#minute-arrow)");
+    minuteHand.setAttribute("stroke", NEG_COLOR);
+    minuteHand.setAttribute("fill", POS_COLOR);
+    minuteHand.setAttribute("points", toPointsString(minuteHandPoints));
     return minuteHand;
 }
 function makeSecondHand() {
-    const secondHand = document.createElement("line");
+    const secondHandPoints = flatHandPoints(HANDS_CONFIG.second.length, HANDS_CONFIG.second.width);
+    const secondHand = document.createElement("polygon");
     secondHand.id = "second-hand";
-    secondHand.setAttribute("stroke", POS_COLOR);
-    secondHand.setAttribute("y2", HANDS_CONFIG.second.length);
-    secondHand.setAttribute("stroke-width", HANDS_CONFIG.second.width);
+    secondHand.setAttribute("stroke", NEG_COLOR);
+    secondHand.setAttribute("fill", POS_COLOR);
+    secondHand.setAttribute("points", toPointsString(secondHandPoints));
     return secondHand;
 }
 function makeCenterPin() {
