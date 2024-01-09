@@ -53,6 +53,7 @@ if (urlParams.get("clockface") === "HOUR_INSIDE") {
 const SVG_WIDTH = 1024;
 const SVG_HEIGHT = 1024;
 
+const ROTATE_DIRECTION: 1 | -1 = Math.sign(urlParams.get("rotate") as any) || 1 as any;
 const SCALE_FACTOR = Number(urlParams.get("scale")) || 1;
 const RENDER_RADIUS = Math.min(SVG_WIDTH / 2, SVG_HEIGHT / 2) * SCALE_FACTOR;
 const LARGEU = RENDER_RADIUS / 16;
@@ -328,7 +329,7 @@ function makeMark(range: DistRange, width: number,
 function makeMarksAndLabels(subdivs: ClockSubdivisions): HTMLElement[] {
   const marksLabels: HTMLElement[] = [];
   for (let i = 0; i < subdivs.num; i++) {
-    const angleDegrees = 360 / subdivs.num * i;
+    const angleDegrees = 360 / subdivs.num * i * ROTATE_DIRECTION;
     const angleRadians = angleDegrees * Math.PI / 180;
 
     let mark: HTMLElement, label: HTMLElement;
@@ -445,19 +446,19 @@ function intializeClock(): void {
 
 function updateSecondHand(time: number): void {
   const secondHand = document.getElementById("second-hand");
-  const angle = (time % 60_000) * 360 / 60_000;
+  const angle = (time % 60_000) * 360 / 60_000 * ROTATE_DIRECTION;
   secondHand.setAttribute("transform", `rotate(${angle})`);
 }
 
 function updateMinuteHand(time: number): void {
   const minuteHand = document.getElementById("minute-hand");
-  const angle = (time % 3600_000) * 360 / 3600_000;
+  const angle = (time % 3600_000) * 360 / 3600_000 * ROTATE_DIRECTION;
   minuteHand.setAttribute("transform", `rotate(${angle})`);
 }
 
 function updateHourHand(time: number): void {
   const hourHand = document.getElementById("hour-hand");
-  const angle = (time % 86400_000) * 360 / 86400_000;
+  const angle = (time % 86400_000) * 360 / 86400_000 * ROTATE_DIRECTION;
   hourHand.setAttribute("transform", `rotate(${angle})`);
 }
 

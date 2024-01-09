@@ -8,6 +8,7 @@ else {
 }
 const SVG_WIDTH = 1024;
 const SVG_HEIGHT = 1024;
+const ROTATE_DIRECTION = Math.sign(urlParams.get("rotate")) || 1;
 const SCALE_FACTOR = Number(urlParams.get("scale")) || 1;
 const RENDER_RADIUS = Math.min(SVG_WIDTH / 2, SVG_HEIGHT / 2) * SCALE_FACTOR;
 const LARGEU = RENDER_RADIUS / 16;
@@ -265,7 +266,7 @@ function makeMark(range, width, rotation) {
 function makeMarksAndLabels(subdivs) {
     const marksLabels = [];
     for (let i = 0; i < subdivs.num; i++) {
-        const angleDegrees = 360 / subdivs.num * i;
+        const angleDegrees = 360 / subdivs.num * i * ROTATE_DIRECTION;
         const angleRadians = angleDegrees * Math.PI / 180;
         let mark, label;
         for (const mlconfig of subdivs.ml) {
@@ -359,17 +360,17 @@ function intializeClock() {
 }
 function updateSecondHand(time) {
     const secondHand = document.getElementById("second-hand");
-    const angle = (time % 60_000) * 360 / 60_000;
+    const angle = (time % 60_000) * 360 / 60_000 * ROTATE_DIRECTION;
     secondHand.setAttribute("transform", `rotate(${angle})`);
 }
 function updateMinuteHand(time) {
     const minuteHand = document.getElementById("minute-hand");
-    const angle = (time % 3600_000) * 360 / 3600_000;
+    const angle = (time % 3600_000) * 360 / 3600_000 * ROTATE_DIRECTION;
     minuteHand.setAttribute("transform", `rotate(${angle})`);
 }
 function updateHourHand(time) {
     const hourHand = document.getElementById("hour-hand");
-    const angle = (time % 86400_000) * 360 / 86400_000;
+    const angle = (time % 86400_000) * 360 / 86400_000 * ROTATE_DIRECTION;
     hourHand.setAttribute("transform", `rotate(${angle})`);
 }
 function updateClock() {
