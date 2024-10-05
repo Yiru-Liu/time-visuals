@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Tab</title>
+    <style>
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        main {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        div {
+            font-size: 12vw;
+            font-family: monospace;
+            text-align: center;
+            overflow: hidden;
+        }
+
+        body {
+            background-color: white;
+            color: black;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            body {
+                background-color: black;
+                color: white;
+            }
+        }
+    </style>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const MS_IN_YEAR = 31557600000;
+            const BEGINNING = 1106664540000;
+            const DECIMALS = 8;
+            const RESOLUTION = 1 / (10 ** DECIMALS)
+            const RESOLUTION_MS = MS_IN_YEAR * RESOLUTION;
+
+            function current() {
+                return (Date.now() - BEGINNING) / MS_IN_YEAR;
+            }
+
+            const elt = document.getElementById("main-div");
+
+            let a = current();
+            function update() {
+                a += RESOLUTION;
+                elt.textContent = a.toFixed(DECIMALS);
+            }
+            update();
+            setInterval(update, RESOLUTION_MS);
+        });
+    </script>
+</head>
+
+<body>
+    <main>
+        <div id="main-div"></div>
+    </main>
+</body>
+
+</html>
