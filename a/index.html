@@ -54,10 +54,8 @@
 
             const elt = document.getElementById("main-div");
 
-            let a = current();
             function update() {
-                a += RESOLUTION;
-                elt.textContent = a.toFixed(DECIMALS);
+                elt.textContent = current().toFixed(DECIMALS);
             }
             update();
             setInterval(update, RESOLUTION_MS);
